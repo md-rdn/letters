@@ -2,20 +2,22 @@
 <html dir="rtl" lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>نظام توليد الخطابات الخاص</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام توليد الخطابات والتقارير</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
   <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f7f6; padding: 30px; direction: rtl; }
-    .container { max-width: 500px; background: #fff; padding: 25px; border-radius: 10px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #333; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: bold; margin-bottom: 5px; }
-    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-    button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 30px; direction: rtl; }
+    .container { max-width: 500px; background: #fff; padding: 30px; border-radius: 12px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+    h2 { text-align: center; color: #333; margin-bottom: 25px; }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-weight: bold; margin-bottom: 6px; color: #2d3748; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+    button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
     button:hover { background: #218838; }
+    #status { margin-top: 15px; text-align: center; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -23,14 +25,18 @@
 <div class="container">
   <h2>توليد الخطابات والتقارير</h2>
   
+  <!-- قائمة اختيار نوع الخطاب المباشرة -->
   <div class="form-group">
-    <label>اختر قالب الخطاب (ملف Word من جهازك):</label>
-    <input type="file" id="templateFile" accept=".docx" required>
+    <label>اختر نوع الخطاب:</label>
+    <select id="docType">
+      <option value="template1.docx">خطاب المطلوبات</option>
+      <option value="template2.docx">خطاب الإفصاح</option>
+    </select>
   </div>
 
   <div class="form-group">
     <label>اسم الجهة:</label>
-    <input type="text" id="companyName" placeholder="أدخل اسم الجهة">
+    <input type="text" id="companyName" placeholder="أدخل اسم الجهة" required>
   </div>
 
   <div class="form-group">
@@ -49,29 +55,36 @@
   </div>
 
   <button onclick="generateDocument()">توليد وتنزيل الخطاب</button>
+
+  <div id="status"></div>
 </div>
 
 <script>
 function generateDocument() {
-  const fileInput = document.getElementById("templateFile");
-  
-  if (!fileInput.files.length) {
-    alert("يرجى اختيار ملف القالب (Word) أولاً!");
+  const statusDiv = document.getElementById("status");
+  const selectedTemplate = document.getElementById("docType").value;
+  const companyName = document.getElementById("companyName").value;
+
+  if (!companyName) {
+    alert("يرجى إدخال اسم الجهة أولاً!");
     return;
   }
 
-  const file = fileInput.files[0];
-  const reader = new FileReader();
+  statusDiv.style.color = "#d69e2e";
+  statusDiv.innerText = "جاري إنشاء الخطاب...";
 
-  reader.onload = function(e) {
-    try {
-      const content = e.target.result;
-      const zip = new PizZip(content);
+  // جلب قالب الوورد المربوط مباشرة من الموقع
+  fetch(selectedTemplate)
+    .then(response => {
+      if (!response.ok) throw new Error("لم يتم العثور على ملف القالب في الموقع");
+      return response.arrayBuffer();
+    })
+    .then(buffer => {
+      const zip = new PizZip(buffer);
       const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-      // استبدال المتغيرات داخل ملف الـ Word
       doc.render({
-        companyName: document.getElementById("companyName").value,
+        companyName: companyName,
         crNumber: document.getElementById("crNumber").value,
         location: document.getElementById("location").value,
         date: document.getElementById("date").value
@@ -82,15 +95,16 @@ function generateDocument() {
         mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
 
-      const fileName = document.getElementById("companyName").value || "خطاب";
-      saveAs(out, fileName + ".docx");
-    } catch (error) {
-      alert("حدث خطأ أثناء معالجة الملف، تأكد أن الوسوم داخل ملف Word مكتوبة مثل {companyName}");
-      console.error(error);
-    }
-  };
+      saveAs(out, "خطاب_" + companyName + ".docx");
 
-  reader.readAsArrayBuffer(file);
+      statusDiv.style.color = "#38a169";
+      statusDiv.innerText = "تم تنزيل الخطاب بنجاح!";
+    })
+    .catch(error => {
+      statusDiv.style.color = "#e53e3e";
+      statusDiv.innerText = "خطأ: " + error.message;
+      console.error(error);
+    });
 }
 </script>
 
