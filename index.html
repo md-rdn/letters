@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>نظام توليد الخطابات الخاص</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
+  <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f7f6; padding: 30px; direction: rtl; }
+    .container { max-width: 500px; background: #fff; padding: 25px; border-radius: 10px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    button:hover { background: #218838; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>توليد الخطابات والتقارير</h2>
+  
+  <div class="form-group">
+    <label>اختر قالب الخطاب (ملف Word من جهازك):</label>
+    <input type="file" id="templateFile" accept=".docx" required>
+  </div>
+
+  <div class="form-group">
+    <label>اسم الجهة:</label>
+    <input type="text" id="companyName" placeholder="أدخل اسم الجهة">
+  </div>
+
+  <div class="form-group">
+    <label>رقم السجل:</label>
+    <input type="text" id="crNumber" placeholder="أدخل رقم السجل">
+  </div>
+
+  <div class="form-group">
+    <label>اسم الموقع:</label>
+    <input type="text" id="location" placeholder="أدخل اسم الموقع">
+  </div>
+
+  <div class="form-group">
+    <label>التاريخ:</label>
+    <input type="date" id="date">
+  </div>
+
+  <button onclick="generateDocument()">توليد وتنزيل الخطاب</button>
+</div>
+
+<script>
+function generateDocument() {
+  const fileInput = document.getElementById("templateFile");
+  
+  if (!fileInput.files.length) {
+    alert("يرجى اختيار ملف القالب (Word) أولاً!");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const content = e.target.result;
+      const zip = new PizZip(content);
+      const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+      // استبدال المتغيرات داخل ملف الـ Word
+      doc.render({
+        companyName: document.getElementById("companyName").value,
+        crNumber: document.getElementById("crNumber").value,
+        location: document.getElementById("location").value,
+        date: document.getElementById("date").value
+      });
+
+      const out = doc.getZip().generate({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+
+      const fileName = document.getElementById("companyName").value || "خطاب";
+      saveAs(out, fileName + ".docx");
+    } catch (error) {
+      alert("حدث خطأ أثناء معالجة الملف، تأكد أن الوسوم داخل ملف Word مكتوبة مثل {companyName}");
+      console.error(error);
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+</script>
+
+</body>
+</html>
