@@ -29,7 +29,7 @@
   <h2>نظام توليد الخطابات والتقارير</h2>
 
   <div class="form-group">
-    <label>اختر التاريخ من التقويم:</label>
+    <label>اختر تاريخ القرار من التقويم:</label>
     <input type="date" id="datePicker" onchange="updateDateAndDay()">
   </div>
 
@@ -48,7 +48,7 @@
 
   <div class="form-group">
     <label>التاريخ الصريح (في الخطاب):</label>
-    <input type="text" id="gDate" placeholder="2026/06/31م">
+    <input type="text" id="gDate" placeholder="2026/09/15م">
   </div>
 
   <div class="form-group">
@@ -67,14 +67,18 @@
   </div>
 
   <div class="form-group">
-    <label>تاريخ نهاية السنة المالية (نصاً):</label>
-    <input type="text" id="yearEnd" value="ديسمبر">
+    <label>اختر تاريخ نهاية السنة المالية من التقويم:</label>
+    <input type="date" id="yearEndPicker" onchange="updateYearEnd()">
   </div>
 
   <div class="form-group">
     <label>تاريخ نهاية السنة المالية (أرقام):</label>
+    <input type="text" id="yearEndShort" placeholder="2025/12/31">
+  </div>
 
-    <input type="text" id="yearEndShort" value="2025/12/31">
+  <div class="form-group">
+    <label>تاريخ نهاية السنة المالية (نصاً):</label>
+    <input type="text" id="yearEnd" placeholder="31/ديسمبر">
   </div>
 
   <div class="form-group">
@@ -98,16 +102,26 @@
 </div>
 
 <script>
-// تعيين تاريخ اليوم كافتراضي عند فتح الصفحة
+const monthsArabic = [
+  "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+  "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+];
+
+// تعيين التواريخ الافتراضية عند تحميل الصفحة
 window.onload = function() {
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, '0');
   const dd = String(today.getDate()).padStart(2, '0');
   
-  const dateInput = document.getElementById("datePicker");
-  dateInput.value = `${yyyy}-${mm}-${dd}`;
+  // تاريخ القرار الافتراضي
+  document.getElementById("datePicker").value = `${yyyy}-${mm}-${dd}`;
   updateDateAndDay();
+
+  // تاريخ نهاية السنة المالية الافتراضي (31 ديسمبر من السنة السابقة)
+  const lastYear = yyyy - 1;
+  document.getElementById("yearEndPicker").value = `${lastYear}-12-31`;
+  updateYearEnd();
 };
 
 function updateDateAndDay() {
@@ -117,15 +131,30 @@ function updateDateAndDay() {
   const dateObj = new Date(dateVal + "T00:00:00");
   const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
   
-  // تحديد يوم الأسبوع تلقائياً
   document.getElementById("day").value = days[dateObj.getDay()];
 
-  // تنسيق التاريخ ليكون YYYY/MM/DD
   const year = dateObj.getFullYear();
   const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const day = String(dateObj.getDate()).padStart(2, '0');
   
   document.getElementById("gDate").value = `${year}/${month}/${day}م`;
+}
+
+function updateYearEnd() {
+  const dateVal = document.getElementById("yearEndPicker").value;
+  if (!dateVal) return;
+
+  const dateObj = new Date(dateVal + "T00:00:00");
+  const year = dateObj.getFullYear();
+  const month = dateObj.getMonth();
+  const monthNum = String(month + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+
+  // تعبئة حقل الأرقام (YYYY/MM/DD)
+  document.getElementById("yearEndShort").value = `${year}/${monthNum}/${day}`;
+
+  // تعبئة حقل النص (DD/اسم الشهر)
+  document.getElementById("yearEnd").value = `${day}/${monthsArabic[month]}`;
 }
 
 function addPartner() {
