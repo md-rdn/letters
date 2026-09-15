@@ -13,7 +13,7 @@
     h2 { text-align: center; color: #2b6cb0; margin-bottom: 20px; }
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-    input[type="text"] { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    input[type="text"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; box-sizing: border-box; font-size: 14px; background-color: #fff; }
     .partner-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
     .btn { display: block; width: 100%; padding: 12px; background-color: #3182ce; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
     .btn:hover { background-color: #2b6cb0; }
@@ -29,13 +29,26 @@
   <h2>نظام توليد الخطابات والتقارير</h2>
 
   <div class="form-group">
-    <label>اليوم (مثال: الأربعاء):</label>
-    <input type="text" id="day" value="الأربعاء">
+    <label>اختر التاريخ من التقويم:</label>
+    <input type="date" id="datePicker" onchange="updateDateAndDay()">
   </div>
 
   <div class="form-group">
-    <label>التاريخ الهجري/الميلادي:</label>
-    <input type="text" id="gDate" value="1447/08/29هـ الموافق 2026/02/18م">
+    <label>اليوم:</label>
+    <select id="day">
+      <option value="الأحد">الأحد</option>
+      <option value="الإثنين">الإثنين</option>
+      <option value="الثلاثاء">الثلاثاء</option>
+      <option value="الأربعاء">الأربعاء</option>
+      <option value="الخميس">الخميس</option>
+      <option value="الجمعة">الجمعة</option>
+      <option value="السبت">السبت</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>التاريخ الصريح (في الخطاب):</label>
+    <input type="text" id="gDate" placeholder="2026/06/31م">
   </div>
 
   <div class="form-group">
@@ -50,16 +63,17 @@
 
   <div class="form-group">
     <label>المدينة/الموقع:</label>
-    <input type="text" id="location" value="مدينة بريدة">
+    <input type="text" id="location" value="مدينة الرياض">
   </div>
 
   <div class="form-group">
     <label>تاريخ نهاية السنة المالية (نصاً):</label>
-    <input type="text" id="yearEnd" value="31/ديسمبر">
+    <input type="text" id="yearEnd" value="ديسمبر">
   </div>
 
   <div class="form-group">
     <label>تاريخ نهاية السنة المالية (أرقام):</label>
+
     <input type="text" id="yearEndShort" value="2025/12/31">
   </div>
 
@@ -84,6 +98,36 @@
 </div>
 
 <script>
+// تعيين تاريخ اليوم كافتراضي عند فتح الصفحة
+window.onload = function() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  
+  const dateInput = document.getElementById("datePicker");
+  dateInput.value = `${yyyy}-${mm}-${dd}`;
+  updateDateAndDay();
+};
+
+function updateDateAndDay() {
+  const dateVal = document.getElementById("datePicker").value;
+  if (!dateVal) return;
+
+  const dateObj = new Date(dateVal + "T00:00:00");
+  const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+  
+  // تحديد يوم الأسبوع تلقائياً
+  document.getElementById("day").value = days[dateObj.getDay()];
+
+  // تنسيق التاريخ ليكون YYYY/MM/DD
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  
+  document.getElementById("gDate").value = `${year}/${month}/${day}م`;
+}
+
 function addPartner() {
   const container = document.getElementById("partnersContainer");
   const div = document.createElement("div");
