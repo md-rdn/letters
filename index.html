@@ -1,104 +1,3 @@
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>قرار تعيين المحاسب القانوني</title>
-  <link rel="icon" type="image/png" href="logo.png">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
-  <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; padding: 20px; direction: rtl; }
-    .container { max-width: 600px; background: #fff; padding: 25px; border-radius: 12px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-    h2 { text-align: center; color: #2d3748; margin-bottom: 20px; }
-    
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: bold; margin-bottom: 5px; color: #2d3748; }
-    input { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-    
-    .partners-box { background: #f8fafc; border: 1px dashed #cbd5e0; padding: 15px; border-radius: 8px; margin-bottom: 18px; }
-    .partner-row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .btn-add { background: #3182ce; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-top: 5px; }
-    .btn-del { background: #e53e3e; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
-
-    button.submit-btn { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; }
-    .status { margin-top: 15px; text-align: center; font-weight: bold; }
-  </style>
-</head>
-<body>
-
-<div class="container">
-  <h2>قرار تعيين المحاسب القانوني</h2>
-
-  <div class="form-group">
-    <label>يوم الاجتماع:</label>
-    <input type="text" id="day" placeholder="مثال: الأحد">
-  </div>
-
-  <div class="form-group">
-    <label>تاريخ الاجتماع:</label>
-    <input type="text" id="gDate" placeholder="مثال: 15/09/2026م">
-  </div>
-
-  <div class="form-group">
-    <label>اسم الشركة:</label>
-    <input type="text" id="companyName" placeholder="أدخل اسم الشركة كاملًا">
-  </div>
-
-  <div class="form-group">
-    <label>رقم السجل التجاري:</label>
-    <input type="text" id="crNumber" placeholder="أدخل رقم السجل التجاري">
-  </div>
-
-  <div class="form-group">
-    <label>مقر الشركة (المدينة):</label>
-    <input type="text" id="location" value="الرياض" placeholder="مثال: الرياض">
-  </div>
-
-  <div class="form-group">
-    <label>تاريخ نهاية السنة المالية (نصًا):</label>
-    <input type="text" id="yearEnd" placeholder="مثال: 31 ديسمبر 2026م">
-  </div>
-
-  <div class="form-group">
-    <label>تاريخ نهاية السنة المالية (أرقام):</label>
-    <input type="text" id="yearEndShort" placeholder="مثال: 31 / 12 / 2026م">
-  </div>
-
-  <div class="form-group">
-    <label>اسم الشخص المفوّض بتوقيع العقد:</label>
-    <input type="text" id="authorizedPerson" placeholder="أدخل اسم الشخص المفوض">
-  </div>
-
-  <!-- قائمة الشركاء -->
-  <div class="partners-box">
-    <label>أسماء الشركاء (جدول التوقيعات):</label>
-    <div id="partnersList">
-      <div class="partner-row">
-        <input type="text" class="partner-name" placeholder="اسم الشريك الأول">
-      </div>
-    </div>
-    <button type="button" class="btn-add" onclick="addPartner()">+ إضافة شريك آخر</button>
-  </div>
-
-  <button class="submit-btn" onclick="generateResolution()">توليد وتنزيل القرار (Word)</button>
-  <div id="status" class="status"></div>
-</div>
-
-<script>
-function addPartner() {
-  const container = document.getElementById("partnersList");
-  const div = document.createElement("div");
-  div.className = "partner-row";
-  div.innerHTML = `
-    <input type="text" class="partner-name" placeholder="اسم الشريك">
-    <button type="button" class="btn-del" onclick="this.parentElement.remove()">✕</button>
-  `;
-  container.appendChild(div);
-}
-
 function generateResolution() {
   const statusDiv = document.getElementById("status");
   const companyName = document.getElementById("companyName").value;
@@ -110,7 +9,8 @@ function generateResolution() {
   partnerInputs.forEach(input => {
     const val = input.value ? input.value.trim() : "";
     if (val !== "") {
-      partnersData.push({ name: val });
+      // إضافة سطر جديد بعد كل اسم لضمان نزول الاسم التالي للسطر الأسفل
+      partnersData.push({ name: val + "\n" });
     }
   });
 
@@ -121,6 +21,7 @@ function generateResolution() {
     .then(res => res.arrayBuffer())
     .then(buffer => {
       const zip = new PizZip(buffer);
+      // تفعيل خيار linebreaks لتنفيذ السطر الجديد داخل الوورد
       const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
       
       doc.render({
@@ -146,7 +47,3 @@ function generateResolution() {
       statusDiv.innerText = "حدث خطأ أثناء جلب ملف template1.docx";
     });
 }
-</script>
-
-</body>
-</html>
