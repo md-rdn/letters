@@ -108,8 +108,9 @@ function generateResolution() {
   const partnerInputs = document.querySelectorAll(".partner-name");
   const partnersData = [];
   partnerInputs.forEach(input => {
-    if (input.value.trim() !== "") {
-      partnersData.push({ name: input.value.trim() });
+    const val = input.value ? input.value.trim() : "";
+    if (val !== "") {
+      partnersData.push({ name: val });
     }
   });
 
