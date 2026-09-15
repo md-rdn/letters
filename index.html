@@ -1,8 +1,12 @@
+<script>
 function generateResolution() {
   const statusDiv = document.getElementById("status");
   const companyName = document.getElementById("companyName").value;
 
-  if (!companyName) { alert("يرجى إدخال اسم الشركة أولاً!"); return; }
+  if (!companyName) { 
+    alert("يرجى إدخال اسم الشركة أولاً!"); 
+    return; 
+  }
 
   const partnerInputs = document.querySelectorAll(".partner-name");
   const partnersData = [];
@@ -16,7 +20,6 @@ function generateResolution() {
   statusDiv.style.color = "#d69e2e";
   statusDiv.innerText = "جاري إنشاء القرار...";
 
-  // استخدام طلب مباشر لمنع ذاكرة المتصفح المؤقتة (Cache Busting)
   fetch("template1.docx?t=" + Date.now())
     .then(res => {
       if (!res.ok) throw new Error("تعذر الوصول لملف الوورد (كود الخطأ: " + res.status + ")");
@@ -50,3 +53,6 @@ function generateResolution() {
       statusDiv.innerText = "تفاصيل الخطأ: " + err.message;
     });
 }
+</script>
+</body>
+</html>
