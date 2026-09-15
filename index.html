@@ -73,12 +73,12 @@
 
   <div class="form-group">
     <label>تاريخ نهاية السنة المالية (أرقام):</label>
-    <input type="text" id="yearEndShort" placeholder="2025/12/31">
+    <input type="text" id="yearEndShort" placeholder="2024/12/31">
   </div>
 
   <div class="form-group">
     <label>تاريخ نهاية السنة المالية (نصاً):</label>
-    <input type="text" id="yearEnd" placeholder="31/ديسمبر">
+    <input type="text" id="yearEnd" placeholder="ديسمبر 2024">
   </div>
 
   <div class="form-group">
@@ -153,8 +153,8 @@ function updateYearEnd() {
   // تعبئة حقل الأرقام (YYYY/MM/DD)
   document.getElementById("yearEndShort").value = `${year}/${monthNum}/${day}`;
 
-  // تعبئة حقل النص (DD/اسم الشهر)
-  document.getElementById("yearEnd").value = `${day}/${monthsArabic[month]}`;
+  // تعبئة حقل النص بسياق تاريخ السنة المعتمد (اسم الشهر + السنة)
+  document.getElementById("yearEnd").value = `${monthsArabic[month]} ${year}`;
 }
 
 function addPartner() {
