@@ -1,148 +1,52 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نظام توليد الخطابات والتقارير</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; direction: rtl; }
-    .container { max-width: 700px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 auto; }
-    h2 { color: #2c3e50; text-align: center; margin-bottom: 25px; font-size: 22px; }
-    .form-group { margin-bottom: 18px; }
-    label { display: block; font-weight: 600; margin-bottom: 6px; color: #34495e; font-size: 14px; }
-    input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-    input[type="text"]:focus { border-color: #3182ce; outline: none; }
-    .partners-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px; margin-top: 20px; }
-    .partner-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-    .btn-add { background: #3182ce; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
-    .btn-remove { background: #e53e3e; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    .btn-submit { width: 100%; background: #2b6cb0; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 25px; }
-    .btn-submit:hover { background: #2c5282; }
-    #status { margin-top: 15px; text-align: center; font-weight: bold; }
-  </style>
-</head>
-<body>
+function generateResolution() {
+  const statusDiv = document.getElementById("status");
+  const companyName = document.getElementById("companyName").value;
 
-<div class="container">
-  <h2>أتمتة إنشاء الخطابات والتقارير</h2>
-  
-  <div class="form-group">
-    <label>اليوم:</label>
-    <input type="text" id="day" value="الاحد">
-  </div>
-  
-  <div class="form-group">
-    <label>تاريخ اليوم (هجري/ميلادي):</label>
-    <input type="text" id="gDate" value="2026/03/12">
-  </div>
+  if (!companyName) { alert("يرجى إدخال اسم الشركة أولاً!"); return; }
 
-  <div class="form-group">
-    <label>اسم الشركة:</label>
-    <input type="text" id="companyName" placeholder="أدخل اسم الشركة">
-  </div>
+  const partnerInputs = document.querySelectorAll(".partner-name");
+  const partnersData = [];
+  partnerInputs.forEach(input => {
+    const val = input.value ? input.value.trim() : "";
+    if (val !== "") {
+      partnersData.push({ name: val });
+    }
+  });
 
-  <div class="form-group">
-    <label>رقم السجل التجاري:</label>
-    <input type="text" id="crNumber" placeholder="أدخل رقم السجل">
-  </div>
+  statusDiv.style.color = "#d69e2e";
+  statusDiv.innerText = "جاري إنشاء القرار...";
 
-  <div class="form-group">
-    <label>مقر الشركة (المدينة):</label>
-    <input type="text" id="location" value="الرياض">
-  </div>
-
-  <div class="form-group">
-    <label>تاريخ نهاية السنة المالية (نصاً):</label>
-    <input type="text" id="yearEnd" value="ديسمبر/31">
-  </div>
-
-  <div class="form-group">
-    <label>تاريخ نهاية السنة المالية (أرقام):</label>
-    <input type="text" id="yearEndShort" value="2025/12/31">
-  </div>
-
-  <div class="form-group">
-    <label>اسم الشخص المفوض بتوقيع العقد:</label>
-    <input type="text" id="authorizedPerson" placeholder="أدخل اسم المفوض">
-  </div>
-
-  <div class="partners-box">
-    <label>أسماء الشركاء (جدول التوقيعات):</label>
-    <div id="partnersContainer">
-      <div class="partner-row">
-        <input type="text" class="partner-name" placeholder="اسم الشريك">
-      </div>
-    </div>
-    <button type="button" class="btn-add" onclick="addPartner()">+ إضافة شريك آخر</button>
-  </div>
-
-  <button class="btn-submit" onclick="generateResolution()">توليد وتنزيل القرار (Word)</button>
-  <div id="status"></div>
-</div>
-
-<script>
-  function addPartner() {
-    const container = document.getElementById("partnersContainer");
-    const row = document.createElement("div");
-    row.className = "partner-row";
-    row.innerHTML = `
-      <input type="text" class="partner-name" placeholder="اسم الشريك">
-      <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
-    `;
-    container.appendChild(row);
-  }
-
-  function generateResolution() {
-    const statusDiv = document.getElementById("status");
-    const companyName = document.getElementById("companyName").value;
-
-    if (!companyName) { alert("يرجى إدخال اسم الشركة أولاً!"); return; }
-
-    const partnerInputs = document.querySelectorAll(".partner-name");
-    const partnersData = [];
-    partnerInputs.forEach(input => {
-      const val = input.value ? input.value.trim() : "";
-      if (val !== "") {
-        partnersData.push({ name: val });
-      }
-    });
-
-    statusDiv.style.color = "#d69e2e";
-    statusDiv.innerText = "جاري إنشاء القرار...";
-
-    fetch("template1.docx")
-      .then(res => res.arrayBuffer())
-      .then(buffer => {
-        const zip = new PizZip(buffer);
-        const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-        
-        doc.render({
-          day: document.getElementById("day").value,
-          gDate: document.getElementById("gDate").value,
-          companyName: companyName,
-          crNumber: document.getElementById("crNumber").value,
-          location: document.getElementById("location").value,
-          yearEnd: document.getElementById("yearEnd").value,
-          yearEndShort: document.getElementById("yearEndShort").value,
-          authorizedPerson: document.getElementById("authorizedPerson").value,
-          partners: partnersData
-        });
-fetch("./template1.docx")
-        const out = doc.getZip().generate({ type: "blob" });
-        saveAs(out, "قرار_تعيين_محاسب_" + companyName + ".docx");
-        
-        statusDiv.style.color = "#38a169";
-        statusDiv.innerText = "تم تنزيل القرار بنجاح!";
-      })
-      .catch(err => {
-        statusDiv.style.color = "#e53e3e";
-        statusDiv.innerText = "حدث خطأ أثناء جلب ملف template1.docx";
+  // استخدام طلب مباشر لمنع ذاكرة المتصفح المؤقتة (Cache Busting)
+  fetch("template1.docx?t=" + Date.now())
+    .then(res => {
+      if (!res.ok) throw new Error("تعذر الوصول لملف الوورد (كود الخطأ: " + res.status + ")");
+      return res.arrayBuffer();
+    })
+    .then(buffer => {
+      const zip = new PizZip(buffer);
+      const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+      
+      doc.render({
+        day: document.getElementById("day").value,
+        gDate: document.getElementById("gDate").value,
+        companyName: companyName,
+        crNumber: document.getElementById("crNumber").value,
+        location: document.getElementById("location").value,
+        yearEnd: document.getElementById("yearEnd").value,
+        yearEndShort: document.getElementById("yearEndShort").value,
+        authorizedPerson: document.getElementById("authorizedPerson").value,
+        partners: partnersData
       });
-  }
-</script>
 
-</body>
-</html>
+      const out = doc.getZip().generate({ type: "blob" });
+      saveAs(out, "قرار_تعيين_محاسب_" + companyName + ".docx");
+      
+      statusDiv.style.color = "#38a169";
+      statusDiv.innerText = "تم تنزيل القرار بنجاح!";
+    })
+    .catch(err => {
+      console.error(err);
+      statusDiv.style.color = "#e53e3e";
+      statusDiv.innerText = "تفاصيل الخطأ: " + err.message;
+    });
+}
