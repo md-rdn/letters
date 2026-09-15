@@ -130,7 +130,7 @@
           authorizedPerson: document.getElementById("authorizedPerson").value,
           partners: partnersData
         });
-
+fetch("./template1.docx")
         const out = doc.getZip().generate({ type: "blob" });
         saveAs(out, "قرار_تعيين_محاسب_" + companyName + ".docx");
         
