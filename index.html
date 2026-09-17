@@ -1,4 +1,4 @@
-// دالة لتنسيق التاريخ العربي بشكل صحيح (مثال: 17 سبتمبر 2026م)
+// دالة تحويل وتنسيق التاريخ العربي
 function formatArabicDate(dateStr) {
   if (!dateStr) return "";
   const dateObj = new Date(dateStr);
@@ -16,28 +16,76 @@ function formatArabicDate(dateStr) {
   return `${day} ${month} ${year}م`;
 }
 
-// إعداد كائن البيانات الموحد
-const entityType = document.getElementById("entityType").value;
-const isProprietary = (entityType === "establishment");
+async function generateSelectedDocs() {
+  const statusDiv = document.getElementById("status");
+  const companyName = document.getElementById("companyName").value.trim();
 
-const rawDate = document.getElementById("gDate").value;
+  if (!companyName) {
+    alert("يرجى إدخال اسم المنشأة أولاً!");
+    return;
+  }
 
-const commonData = {
-  day: document.getElementById("day").value,
-  gDate: formatArabicDate(rawDate), // التاريخ المنسق جاهزاً
-  companyName: companyName,
-  crNumber: document.getElementById("crNumber").value,
-  location: document.getElementById("location").value,
-  yearEnd: document.getElementById("yearEnd").value,
-  yearEndShort: document.getElementById("yearEndShort").value,
-  authorizedPerson: document.getElementById("authorizedPerson").value,
-  engagementDate: formatArabicDate(document.getElementById("engagementDate").value),
-  partners: partnersData,
-  isProprietary: isProprietary,
-  
-  // صيغ الكلمات المختلفة لاستخدامها بدقة في القالب:
-  entityWord: isProprietary ? "مؤسسة" : "شركة",             // مؤسسة / شركة
-  entityThe: isProprietary ? "المؤسسة" : "الشركة",           // المؤسسة / الشركة
-  entityFor: isProprietary ? "لمؤسسة" : "لشركة",             // لمؤسسة / لشركة
-  entityForThe: isProprietary ? "للمؤسسة" : "للشركة"         // للمؤسسة / للشركة
-};
+  const doAppointment = document.getElementById("chk_appointment").checked;
+  const doRepresentation = document.getElementById("chk_representation").checked;
+
+  if (!doAppointment && !doRepresentation) {
+    alert("يرجى اختيار خطاب واحد على الأقل للتوليد!");
+    return;
+  }
+
+  statusDiv.style.color = "#d69e2e";
+  statusDiv.innerText = "جاري إنشاء الخطابات...";
+
+  const partnerInputs = document.querySelectorAll(".partner-name");
+  const partnersData = [];
+  partnerInputs.forEach(input => {
+    const val = input.value ? input.value.trim() : "";
+    if (val !== "") partnersData.push({ name: val });
+  });
+
+  const entityType = document.getElementById("entityType").value;
+  const isProprietary = (entityType === "establishment");
+  const rawDate = document.getElementById("gDate").value;
+
+  // كائن البيانات الشامل والمنسق
+  const commonData = {
+    day: document.getElementById("day").value,
+    gDate: formatArabicDate(rawDate),
+    companyName: companyName,
+    crNumber: document.getElementById("crNumber").value,
+    location: document.getElementById("location").value,
+    yearEnd: document.getElementById("yearEnd").value,
+    yearEndShort: document.getElementById("yearEndShort").value,
+    authorizedPerson: document.getElementById("authorizedPerson").value,
+    engagementDate: formatArabicDate(document.getElementById("engagementDate").value),
+    partners: partnersData,
+    isProprietary: isProprietary,
+    
+    // المتغيرات اللغوية الجديدة:
+    entityWord: isProprietary ? "مؤسسة" : "شركة",
+    entityThe: isProprietary ? "المؤسسة" : "الشركة",
+    entityFor: isProprietary ? "لمؤسسة" : "لشركة",
+    entityForThe: isProprietary ? "للمؤسسة" : "للشركة"
+  };
+
+  try {
+    if (doAppointment) {
+      await processAndDownload("template1.docx", `قرار_تعيين_${companyName}.docx`, commonData);
+    }
+    
+    if (doAppointment && doRepresentation) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    if (doRepresentation) {
+      await processAndDownload("representation_letter.docx", `خطاب_التمثيل_${companyName}.docx`, commonData);
+    }
+
+    statusDiv.style.color = "#38a169";
+    statusDiv.innerText = "تم تنزيل جميع الخطابات المختارة بنجاح!";
+  } catch (err) {
+    console.error(err);
+    statusDiv.style.color = "#e53e3e";
+    statusDiv.innerText = "حدث خطأ أثناء الإنشاء، تأكد من رفع ملف القالب وتطابق الوسوم.";
+  }
+}
