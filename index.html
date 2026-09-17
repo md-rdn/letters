@@ -49,13 +49,13 @@
   </div>
 
   <div class="form-group">
-    <label>التاريخ الميلادي:</label>
+    <label>التاريخ الميلادي للخطاب:</label>
     <input type="date" id="gDate">
   </div>
 
   <div class="form-group">
-    <label>السنة المالية المنتهية في:</label>
-    <input type="text" id="yearEnd" placeholder="مثال: 31 ديسمبر 2025">
+    <label>تاريخ نهاية السنة المالية:</label>
+    <input type="date" id="yearEnd">
   </div>
 
   <div class="form-group">
@@ -77,7 +77,7 @@
     <label>الشركاء / الأعضاء:</label>
     <div id="partnersContainer">
       <div class="partner-row">
-        <input type="text" class="partner-name" placeholder="اسم الشريك الأول">
+        <input type="text" class="partner-name" placeholder="اسم الشريك">
         <input type="text" class="partner-title" placeholder="الصفة (مثال: شريك / رئيس مجلس الإدارة)">
       </div>
     </div>
@@ -102,7 +102,6 @@
 
   <!-- كود المعالجة -->
   <script>
-    // إضافة حقل شريك جديد ديناميكياً
     function addPartnerRow() {
       const container = document.getElementById("partnersContainer");
       const div = document.createElement("div");
@@ -166,7 +165,6 @@
       statusDiv.style.color = "#d69e2e";
       statusDiv.innerText = "جاري إنشاء الخطابات...";
 
-      // تجميع بيانات الشركاء (الاسم والصفة)
       const partnerRows = document.querySelectorAll(".partner-row");
       const partnersData = [];
       partnerRows.forEach(row => {
@@ -179,15 +177,14 @@
 
       const entityType = document.getElementById("entityType").value;
       const isProprietary = (entityType === "establishment");
-      const rawDate = document.getElementById("gDate").value;
 
       const commonData = {
         day: document.getElementById("day").value,
-        gDate: formatArabicDate(rawDate),
+        gDate: formatArabicDate(document.getElementById("gDate").value),
         companyName: companyName,
         crNumber: document.getElementById("crNumber").value,
         location: document.getElementById("location").value,
-        yearEnd: document.getElementById("yearEnd").value,
+        yearEnd: formatArabicDate(document.getElementById("yearEnd").value),
         yearEndShort: document.getElementById("yearEndShort").value,
         authorizedPerson: document.getElementById("authorizedPerson").value,
         engagementDate: formatArabicDate(document.getElementById("engagementDate").value),
@@ -218,7 +215,7 @@
       } catch (err) {
         console.error(err);
         statusDiv.style.color = "#e53e3e";
-        statusDiv.innerText = "حدث خطأ أثناء الإنشاء، تأكد من رفع ملف القالب وتطابق الوسوم.";
+        statusDiv.innerText = "حدث خطأ أثناء الإنشاء، تأكد من تصحيح الوسوم في ملف الوورد.";
       }
     }
   </script>
