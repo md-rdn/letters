@@ -1,11 +1,100 @@
-<!-- استدعاء المكتبات -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>أتمتة إنشاء الخطابات والتقارير</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 20px; line-height: 1.6; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input, select { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    .checkbox-group { margin: 15px 0; }
+  </style>
+</head>
+<body>
+
+  <h2>أتمتة إنشاء الخطابات والتقارير</h2>
+
+  <div class="form-group">
+    <label>نوع المنشأة:</label>
+    <select id="entityType">
+      <option value="company">شركة</option>
+      <option value="establishment">مؤسسة</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>اسم المنشأة:</label>
+    <input type="text" id="companyName" placeholder="أدخل اسم المنشأة">
+  </div>
+
+  <div class="form-group">
+    <label>رقم السجل التجاري:</label>
+    <input type="text" id="crNumber">
+  </div>
+
+  <div class="form-group">
+    <label>المدينة / المقر:</label>
+    <input type="text" id="location" value="الرياض">
+  </div>
+
+  <div class="form-group">
+    <label>اليوم:</label>
+    <input type="text" id="day" placeholder="مثال: الخميس">
+  </div>
+
+  <div class="form-group">
+    <label>التاريخ الميلادي:</label>
+    <input type="date" id="gDate">
+  </div>
+
+  <div class="form-group">
+    <label>السنة المالية المنتهية في:</label>
+    <input type="text" id="yearEnd" placeholder="مثال: 31 ديسمبر 2025">
+  </div>
+
+  <div class="form-group">
+    <label>السنة المالية (مختصر):</label>
+    <input type="text" id="yearEndShort" placeholder="مثال: 2025">
+  </div>
+
+  <div class="form-group">
+    <label>اسم للشخص المخول / المدير:</label>
+    <input type="text" id="authorizedPerson">
+  </div>
+
+  <div class="form-group">
+    <label>تاريخ خطبة التعيين / المراجعة:</label>
+    <input type="date" id="engagementDate">
+  </div>
+
+  <div class="form-group">
+    <label>الشركاء / الأعضاء:</label>
+    <div id="partnersContainer">
+      <input type="text" class="partner-name" placeholder="اسم الشريك الأول" style="margin-bottom: 5px;">
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="checkbox-group">
+    <label><input type="checkbox" id="chk_appointment" checked> قرار التعيين (template1.docx)</label>
+    <label><input type="checkbox" id="chk_representation" checked> خطاب التمثيل (representation_letter.docx)</label>
+  </div>
+
+  <button onclick="generateSelectedDocs()">توليد وتنزيل الخطابات المختارة</button>
+
+  <div id="status" style="margin-top: 15px; font-weight: bold;"></div>
+
+  <!-- استدعاء المكتبات -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-  <!-- كود JavaScript الخاص بالبرمجة والمعالجة -->
+  <!-- كود المعالجة -->
   <script>
-    // 1. دالة معالجة وتنزيل الملفات
     function processAndDownload(templateFile, outputFilename, data) {
       return fetch(templateFile + "?t=" + Date.now())
         .then(res => {
@@ -21,7 +110,6 @@
         });
     }
 
-    // 2. دالة تحويل وتنسيق التاريخ العربي
     function formatArabicDate(dateStr) {
       if (!dateStr) return "";
       const dateObj = new Date(dateStr);
@@ -39,7 +127,6 @@
       return `${day} ${month} ${year}م`;
     }
 
-    // 3. دالة توليد المستندات المختارة
     async function generateSelectedDocs() {
       const statusDiv = document.getElementById("status");
       const companyName = document.getElementById("companyName").value.trim();
@@ -84,7 +171,6 @@
         partners: partnersData,
         isProprietary: isProprietary,
         
-        // صيغ الكلمات المختلفة للوسوم الجديدة
         entityWord: isProprietary ? "مؤسسة" : "شركة",
         entityThe: isProprietary ? "المؤسسة" : "الشركة",
         entityFor: isProprietary ? "لمؤسسة" : "لشركة",
