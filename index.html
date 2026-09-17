@@ -1,91 +1,117 @@
-// دالة تحويل وتنسيق التاريخ العربي
-function formatArabicDate(dateStr) {
-  if (!dateStr) return "";
-  const dateObj = new Date(dateStr);
-  if (isNaN(dateObj)) return dateStr;
+<!-- استدعاء المكتبات -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-  const months = [
-    "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
-    "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-  ];
-
-  const day = dateObj.getDate();
-  const month = months[dateObj.getMonth()];
-  const year = dateObj.getFullYear();
-
-  return `${day} ${month} ${year}م`;
-}
-
-async function generateSelectedDocs() {
-  const statusDiv = document.getElementById("status");
-  const companyName = document.getElementById("companyName").value.trim();
-
-  if (!companyName) {
-    alert("يرجى إدخال اسم المنشأة أولاً!");
-    return;
-  }
-
-  const doAppointment = document.getElementById("chk_appointment").checked;
-  const doRepresentation = document.getElementById("chk_representation").checked;
-
-  if (!doAppointment && !doRepresentation) {
-    alert("يرجى اختيار خطاب واحد على الأقل للتوليد!");
-    return;
-  }
-
-  statusDiv.style.color = "#d69e2e";
-  statusDiv.innerText = "جاري إنشاء الخطابات...";
-
-  const partnerInputs = document.querySelectorAll(".partner-name");
-  const partnersData = [];
-  partnerInputs.forEach(input => {
-    const val = input.value ? input.value.trim() : "";
-    if (val !== "") partnersData.push({ name: val });
-  });
-
-  const entityType = document.getElementById("entityType").value;
-  const isProprietary = (entityType === "establishment");
-  const rawDate = document.getElementById("gDate").value;
-
-  // كائن البيانات الشامل والمنسق
-  const commonData = {
-    day: document.getElementById("day").value,
-    gDate: formatArabicDate(rawDate),
-    companyName: companyName,
-    crNumber: document.getElementById("crNumber").value,
-    location: document.getElementById("location").value,
-    yearEnd: document.getElementById("yearEnd").value,
-    yearEndShort: document.getElementById("yearEndShort").value,
-    authorizedPerson: document.getElementById("authorizedPerson").value,
-    engagementDate: formatArabicDate(document.getElementById("engagementDate").value),
-    partners: partnersData,
-    isProprietary: isProprietary,
-    
-    // المتغيرات اللغوية الجديدة:
-    entityWord: isProprietary ? "مؤسسة" : "شركة",
-    entityThe: isProprietary ? "المؤسسة" : "الشركة",
-    entityFor: isProprietary ? "لمؤسسة" : "لشركة",
-    entityForThe: isProprietary ? "للمؤسسة" : "للشركة"
-  };
-
-  try {
-    if (doAppointment) {
-      await processAndDownload("template1.docx", `قرار_تعيين_${companyName}.docx`, commonData);
-    }
-    
-    if (doAppointment && doRepresentation) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  <!-- كود JavaScript الخاص بالبرمجة والمعالجة -->
+  <script>
+    // 1. دالة معالجة وتنزيل الملفات
+    function processAndDownload(templateFile, outputFilename, data) {
+      return fetch(templateFile + "?t=" + Date.now())
+        .then(res => {
+          if (!res.ok) throw new Error(`تعذر تحميل الملف ${templateFile}`);
+          return res.arrayBuffer();
+        })
+        .then(buffer => {
+          const zip = new PizZip(buffer);
+          const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+          doc.render(data);
+          const out = doc.getZip().generate({ type: "blob" });
+          saveAs(out, outputFilename);
+        });
     }
 
-    if (doRepresentation) {
-      await processAndDownload("representation_letter.docx", `خطاب_التمثيل_${companyName}.docx`, commonData);
+    // 2. دالة تحويل وتنسيق التاريخ العربي
+    function formatArabicDate(dateStr) {
+      if (!dateStr) return "";
+      const dateObj = new Date(dateStr);
+      if (isNaN(dateObj)) return dateStr;
+
+      const months = [
+        "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+        "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+      ];
+
+      const day = dateObj.getDate();
+      const month = months[dateObj.getMonth()];
+      const year = dateObj.getFullYear();
+
+      return `${day} ${month} ${year}م`;
     }
 
-    statusDiv.style.color = "#38a169";
-    statusDiv.innerText = "تم تنزيل جميع الخطابات المختارة بنجاح!";
-  } catch (err) {
-    console.error(err);
-    statusDiv.style.color = "#e53e3e";
-    statusDiv.innerText = "حدث خطأ أثناء الإنشاء، تأكد من رفع ملف القالب وتطابق الوسوم.";
-  }
-}
+    // 3. دالة توليد المستندات المختارة
+    async function generateSelectedDocs() {
+      const statusDiv = document.getElementById("status");
+      const companyName = document.getElementById("companyName").value.trim();
+
+      if (!companyName) {
+        alert("يرجى إدخال اسم المنشأة أولاً!");
+        return;
+      }
+
+      const doAppointment = document.getElementById("chk_appointment").checked;
+      const doRepresentation = document.getElementById("chk_representation").checked;
+
+      if (!doAppointment && !doRepresentation) {
+        alert("يرجى اختيار خطاب واحد على الأقل للتوليد!");
+        return;
+      }
+
+      statusDiv.style.color = "#d69e2e";
+      statusDiv.innerText = "جاري إنشاء الخطابات...";
+
+      const partnerInputs = document.querySelectorAll(".partner-name");
+      const partnersData = [];
+      partnerInputs.forEach(input => {
+        const val = input.value ? input.value.trim() : "";
+        if (val !== "") partnersData.push({ name: val });
+      });
+
+      const entityType = document.getElementById("entityType").value;
+      const isProprietary = (entityType === "establishment");
+      const rawDate = document.getElementById("gDate").value;
+
+      const commonData = {
+        day: document.getElementById("day").value,
+        gDate: formatArabicDate(rawDate),
+        companyName: companyName,
+        crNumber: document.getElementById("crNumber").value,
+        location: document.getElementById("location").value,
+        yearEnd: document.getElementById("yearEnd").value,
+        yearEndShort: document.getElementById("yearEndShort").value,
+        authorizedPerson: document.getElementById("authorizedPerson").value,
+        engagementDate: formatArabicDate(document.getElementById("engagementDate").value),
+        partners: partnersData,
+        isProprietary: isProprietary,
+        
+        // صيغ الكلمات المختلفة للوسوم الجديدة
+        entityWord: isProprietary ? "مؤسسة" : "شركة",
+        entityThe: isProprietary ? "المؤسسة" : "الشركة",
+        entityFor: isProprietary ? "لمؤسسة" : "لشركة",
+        entityForThe: isProprietary ? "للمؤسسة" : "للشركة"
+      };
+
+      try {
+        if (doAppointment) {
+          await processAndDownload("template1.docx", `قرار_تعيين_${companyName}.docx`, commonData);
+        }
+        
+        if (doAppointment && doRepresentation) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        if (doRepresentation) {
+          await processAndDownload("representation_letter.docx", `خطاب_التمثيل_${companyName}.docx`, commonData);
+        }
+
+        statusDiv.style.color = "#38a169";
+        statusDiv.innerText = "تم تنزيل جميع الخطابات المختارة بنجاح!";
+      } catch (err) {
+        console.error(err);
+        statusDiv.style.color = "#e53e3e";
+        statusDiv.innerText = "حدث خطأ أثناء الإنشاء، تأكد من رفع ملف القالب وتطابق الوسوم.";
+      }
+    }
+  </script>
+</body>
+</html>
