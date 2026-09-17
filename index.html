@@ -16,6 +16,11 @@
     .checkbox-group { margin: 15px 0; }
     #status { margin-top: 15px; font-weight: bold; white-space: pre-wrap; }
   </style>
+
+  <!-- استدعاء المكتبات من موزع CDN موثوق جداً (unpkg) -->
+  <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.min.js"></script>
+  <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js"></script>
+  <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
 <body>
 
@@ -96,12 +101,6 @@
 
   <div id="status"></div>
 
-  <!-- استدعاء المكتبات -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-  <!-- كود المعالجة -->
   <script>
     function addPartnerRow() {
       const container = document.getElementById("partnersContainer");
@@ -117,10 +116,13 @@
     function processAndDownload(templateFile, outputFilename, data) {
       return fetch(templateFile + "?t=" + Date.now())
         .then(res => {
-          if (!res.ok) throw new Error(`تعذر تحميل الملف: ${templateFile}`);
+          if (!res.ok) throw new Error(`تعذر تحميل الملف من السيرفر: ${templateFile}`);
           return res.arrayBuffer();
         })
         .then(buffer => {
+          if (typeof PizZip === 'undefined') {
+            throw new Error("فشل تحميل مكتبة PizZip، يرجى إعادة تحديث الصفحة.");
+          }
           const zip = new PizZip(buffer);
           const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
           
@@ -131,7 +133,7 @@
             if (error.properties && error.properties.errors) {
               detail = error.properties.errors.map(e => e.message || e.explanation).join(" | ");
             }
-            throw new Error(`خطأ في ملف (${templateFile}): ${error.message} ${detail}`);
+            throw new Error(`خطأ داخل وسوم ملف (${templateFile}): ${error.message} ${detail}`);
           }
 
           const out = doc.getZip().generate({ type: "blob" });
