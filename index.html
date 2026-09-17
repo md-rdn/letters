@@ -8,7 +8,7 @@
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 5px; font-weight: bold; }
     input, select { width: 100%; padding: 8px; box-sizing: border-box; }
-    button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
     button:hover { background-color: #0056b3; }
     .btn-add { background-color: #28a745; margin-top: 5px; }
     .btn-add:hover { background-color: #218838; }
@@ -17,10 +17,10 @@
     #status { margin-top: 15px; font-weight: bold; white-space: pre-wrap; }
   </style>
 
-  <!-- استدعاء المكتبات من موزع CDN موثوق جداً (unpkg) -->
-  <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.min.js"></script>
-  <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js"></script>
-  <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <!-- تحميل المكتبات المباشر عبر أكثر CDN مستقر عالمياً -->
+  <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.4/dist/pizzip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.37.11/build/docxtemplater.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
 <body>
 
@@ -93,7 +93,7 @@
   <hr>
 
   <div class="checkbox-group">
-    <label><input type="checkbox" id="chk_appointment" checked> قرار التعيين (template1.docx)</label>
+    <label><input type="checkbox" id="chk_appointment" checked> قرار التعيين (template1.docx)</label><br>
     <label><input type="checkbox" id="chk_representation" checked> خطاب التمثيل (representation_letter.docx)</label>
   </div>
 
@@ -116,12 +116,12 @@
     function processAndDownload(templateFile, outputFilename, data) {
       return fetch(templateFile + "?t=" + Date.now())
         .then(res => {
-          if (!res.ok) throw new Error(`تعذر تحميل الملف من السيرفر: ${templateFile}`);
+          if (!res.ok) throw new Error(`تعذر تحميل الملف: ${templateFile}`);
           return res.arrayBuffer();
         })
         .then(buffer => {
-          if (typeof PizZip === 'undefined') {
-            throw new Error("فشل تحميل مكتبة PizZip، يرجى إعادة تحديث الصفحة.");
+          if (typeof PizZip === 'undefined' || typeof docxtemplater === 'undefined') {
+            throw new Error("المتصفح حجب تحميل المكتبات. يرجى إيقاف مانع الإعلانات (AdBlock) ثم تحديث الصفحة.");
           }
           const zip = new PizZip(buffer);
           const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
@@ -133,7 +133,7 @@
             if (error.properties && error.properties.errors) {
               detail = error.properties.errors.map(e => e.message || e.explanation).join(" | ");
             }
-            throw new Error(`خطأ داخل وسوم ملف (${templateFile}): ${error.message} ${detail}`);
+            throw new Error(`خطأ في وسم داخل (${templateFile}): ${error.message} ${detail}`);
           }
 
           const out = doc.getZip().generate({ type: "blob" });
