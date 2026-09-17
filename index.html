@@ -14,6 +14,7 @@
     .btn-add:hover { background-color: #218838; }
     .partner-row { display: flex; gap: 10px; margin-bottom: 8px; }
     .checkbox-group { margin: 15px 0; }
+    #status { margin-top: 15px; font-weight: bold; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -93,7 +94,7 @@
 
   <button onclick="generateSelectedDocs()">توليد وتنزيل الخطابات المختارة</button>
 
-  <div id="status" style="margin-top: 15px; font-weight: bold;"></div>
+  <div id="status"></div>
 
   <!-- استدعاء المكتبات -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
@@ -116,13 +117,23 @@
     function processAndDownload(templateFile, outputFilename, data) {
       return fetch(templateFile + "?t=" + Date.now())
         .then(res => {
-          if (!res.ok) throw new Error(`تعذر تحميل الملف ${templateFile}`);
+          if (!res.ok) throw new Error(`تعذر تحميل الملف: ${templateFile}`);
           return res.arrayBuffer();
         })
         .then(buffer => {
           const zip = new PizZip(buffer);
           const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-          doc.render(data);
+          
+          try {
+            doc.render(data);
+          } catch (error) {
+            let detail = "";
+            if (error.properties && error.properties.errors) {
+              detail = error.properties.errors.map(e => e.message || e.explanation).join(" | ");
+            }
+            throw new Error(`خطأ في ملف (${templateFile}): ${error.message} ${detail}`);
+          }
+
           const out = doc.getZip().generate({ type: "blob" });
           saveAs(out, outputFilename);
         });
@@ -203,7 +214,7 @@
         }
         
         if (doAppointment && doRepresentation) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 800));
         }
 
         if (doRepresentation) {
@@ -215,7 +226,7 @@
       } catch (err) {
         console.error(err);
         statusDiv.style.color = "#e53e3e";
-        statusDiv.innerText = "حدث خطأ أثناء الإنشاء، تأكد من تصحيح الوسوم في ملف الوورد.";
+        statusDiv.innerText = err.message;
       }
     }
   </script>
